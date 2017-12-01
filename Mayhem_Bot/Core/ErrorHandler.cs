@@ -58,6 +58,9 @@ namespace Mayhem_Bot.Core
 
         public async Task HandleCommandError(SocketCommandContext Context, IResult result, string Source)
         {
+            //Needs some sort of refactor cause of some nullreferences ?!?!?
+            //await debugging is like a piece of shit
+
             string message = "";
             switch (result.Error.Value.ToString())
             {

@@ -14,6 +14,7 @@ namespace Mayhem_Bot
     {
         static public DiscordSocketClient _client;
         static public ErrorHandler _errorHandler;
+        static public ListenerHandler _listenerHandler;
 
         private CommandService _commands;
         private IServiceProvider _services;
@@ -30,6 +31,9 @@ namespace Mayhem_Bot
             //Initialize a new ErrorHandler and direct errors direct to the handler
             _errorHandler = new ErrorHandler();
             _client.Log += _errorHandler._client_Log;
+            //Set Listeners
+            _listenerHandler = new ListenerHandler();
+            SetListeners();
             //Initialize the CommandHandler
             await InstallCommandHandlerAnsyc();
             //Initialize the Database
@@ -42,16 +46,16 @@ namespace Mayhem_Bot
             await Task.Delay(-1);
         }
 
+       
+
         public async Task LoadDatabase()
         {
+            //initialize a timer which saves the database after a period of time
             AutoResetEvent _autoEvent = new AutoResetEvent(false);
-
-            //TIMER FOR DATABASE FILE HANDLING - Due to writing and reading process it wouldn´t be recommendet to write data a thousand times at once... So in this case
-            //we create a filehandler which save the database all 10 seconds if needed.
-
-            //Timer _tm = new Timer(DatabaseHandler.SaveDatabase(), _autoEvent, 1000, 10000);
-            DatabaseHandler.LoadDatabase();            
+            SaveTimer = new Timer(SaveTimerExecute, _autoEvent, 1000, 10000);
+            await DatabaseHandler.LoadDatabase();            
         }
+       
         public async Task InstallCommandHandlerAnsyc()
         {
             //Adds the services to the ServiceProvider
@@ -71,6 +75,14 @@ namespace Mayhem_Bot
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
         }
 
+        private void SetListeners()
+        {
+            _client.JoinedGuild += _listenerHandler.JoinedGuild;
+            _client.LeftGuild += _listenerHandler.LeftGuild;
+        }
+
+      
+
         private async Task HandleCommands(Discord.WebSocket.SocketMessage arg)
         {
             //Handle Commands right here
@@ -78,7 +90,6 @@ namespace Mayhem_Bot
             if (message == null) return;
             //Track where the command prefix ends and where the command begins
             int argPos = 0;
-
             //Check if author is a bot
             if (message.Author.IsBot) return;
             //Determine if the message is a command or a mention
@@ -87,8 +98,31 @@ namespace Mayhem_Bot
             var context = new SocketCommandContext(_client, message);
             //Execute the Command
             var result = await _commands.ExecuteAsync(context, argPos, _services);
+
+
+
+            /*TESTCORNER !!!!*/
+
+            //if(context.Message.Content == "!save")
+            //{
+            //    ServerSettings.SetSettingsValue(ServerSettings.Settings.SendPrivateMessage, true, context.Guild.Id);
+            //    ServerSettings.SetSettingsValue(ServerSettings.Settings.SendErrorMessage, true, context.Guild.Id);
+            //}
+
+
+
+
             //If error occures - direct them to the ErrorHandler
             if (!result.IsSuccess) { await _errorHandler.HandleCommandError(context, result, "HandleCommands"); }
         }
+
+
+        #region Timer functions
+        Timer SaveTimer;
+        public async void SaveTimerExecute(Object StateInfo)
+        {
+            await DatabaseHandler.SaveDatabase();
+        }
+        #endregion
     }
 }

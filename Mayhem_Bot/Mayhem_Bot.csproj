@@ -11,6 +11,7 @@
     <PackageReference Include="Discord.Net.Commands" Version="1.0.2" />
     <PackageReference Include="Discord.Net.Core" Version="1.0.2" />
     <PackageReference Include="Discord.Net.Modules" Version="0.9.6" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.1-beta1" />
   </ItemGroup>
 
   <ItemGroup>

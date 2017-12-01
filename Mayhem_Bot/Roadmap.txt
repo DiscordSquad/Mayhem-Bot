@@ -1,0 +1,4 @@
+﻿Databasehandler - check
+Settingshandler - check
+
+ErrorHandler refactoring 
