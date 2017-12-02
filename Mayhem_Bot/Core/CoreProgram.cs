@@ -79,6 +79,7 @@ namespace Mayhem_Bot
         {
             _client.JoinedGuild += _listenerHandler.JoinedGuild;
             _client.LeftGuild += _listenerHandler.LeftGuild;
+            
         }
 
       
@@ -93,27 +94,39 @@ namespace Mayhem_Bot
             //Check if author is a bot
             if (message.Author.IsBot) return;
             //Determine if the message is a command or a mention
-            if (!(message.HasCharPrefix(CoreProgram.prefix, ref argPos) || message.HasMentionPrefix(_client.CurrentUser, ref argPos))) return;
+            if (!(message.HasCharPrefix(CoreProgram.prefix, ref argPos) || message.HasMentionPrefix(_client.CurrentUser, ref argPos)))
+            {
+                //check if message is a private message
+                if (message.Channel.Name == $"@{message.Author.Username}#{message.Author.DiscriminatorValue}")
+                {
+                    //Case private message
+                    string text = "";
+                    text = message.Attachments.Count > 0 ? $"[{message.Channel.Name}|{message.Author.Username}] whispered: {message.Content} 'FILE ATTACHED'" : $"[{message.Channel.Name}|{message.Author.Username}] whispered: {message.Content}";
+                    //Send message to the logHandler
+                    await _errorHandler._client_Log(new LogMessage(LogSeverity.Warning, "DM Chat", text));
+                
+                }
+                else
+                {
+                    //Case public message
+                    string text = "";
+                    text = message.Attachments.Count > 0 ? $"[{message.Channel.Name}|{message.Author.Username}] wrote: {message.Content} 'FILE ATTACHED'" : $"[{message.Channel.Name}|{message.Author.Username}] wrote: {message.Content}";
+                    //Send message to the logHandler
+                    await _errorHandler._client_Log(new LogMessage(LogSeverity.Debug, "Discord Chat",text));
+                   
+                }
+                return;
+            };
+
             //Create CommandContext
             var context = new SocketCommandContext(_client, message);
             //Execute the Command
             var result = await _commands.ExecuteAsync(context, argPos, _services);
-
-
-
-            /*TESTCORNER !!!!*/
-
-            //if(context.Message.Content == "!save")
-            //{
-            //    ServerSettings.SetSettingsValue(ServerSettings.Settings.SendPrivateMessage, true, context.Guild.Id);
-            //    ServerSettings.SetSettingsValue(ServerSettings.Settings.SendErrorMessage, true, context.Guild.Id);
-            //}
-
-
-
+            //Send commanmd to the logHandler
+            await _errorHandler._client_Log(new LogMessage(LogSeverity.Verbose, "Discord Chat", $"[{message.Channel.Name}|{message.Author.Username}] Command: {message.Content}"));
 
             //If error occures - direct them to the ErrorHandler
-            if (!result.IsSuccess) { await _errorHandler.HandleCommandError(context, result, "HandleCommands"); }
+            if (!result.IsSuccess) { await _errorHandler.HandleCommandError(context, result, "HandleCommands", context.IsPrivate); }
         }
 
 

@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -40,7 +41,7 @@ namespace Mayhem_Bot.Core
                     message += $"Message: {arg.Message} - Source: {arg.Source}";
                     break;
                 case LogSeverity.Verbose:
-                    c = ConsoleColor.White;
+                    c = MESSAGE_COLOR;
                     message += $"{arg.Message} - Source: {arg.Source}";
                     break;
                 case LogSeverity.Debug:
@@ -53,26 +54,51 @@ namespace Mayhem_Bot.Core
             Console.ForegroundColor = c;
             Console.WriteLine(message);
             Console.ForegroundColor = ConsoleColor.White;
-            return default(Task);
+            return Task.CompletedTask;
         }
 
-        public async Task HandleCommandError(SocketCommandContext Context, IResult result, string Source)
+        public async Task HandleCommandError(SocketCommandContext Context, IResult result, string Source, bool isPrivate)
         {
-            //Needs some sort of refactor cause of some nullreferences ?!?!?
-            //await debugging is like a piece of shit
-
             string message = "";
             switch (result.Error.Value.ToString())
             {
                 case "UnknownCommand":
-                    message = "This is an unknown Command";
+                    message = $"I am not able to recognize this command, {Context.User.Username}.";
                     break;
             }
-            if (ServerSettings.GetSettingsValue(ServerSettings.Settings.SendErrorMessage, Context.Guild.Id))
+
+           
+            //Is definitely a private channel, no settings needed
+            if (Context.IsPrivate)
             {
-                await Context.Channel.SendMessageAsync(message, false);
+                //Create a new channel
+                var channel = await Context.User.GetOrCreateDMChannelAsync() as IDMChannel;
+                //Send message to user
+                await channel.SendMessageAsync(message, false);
+                //write to log
+                await _client_Log(new LogMessage(LogSeverity.Error, $"{Source}", $"[{Context.Channel.Name}|{Context.User.Username}] - ['{Context.Message.Content}'] Exception: {result.Error}"));
+                return;
             }
-            await _client_Log(new LogMessage(LogSeverity.Error, $"{Source}", $"[{Context.Guild.Name}|{Context.Channel.Name}|{Context.User.Username}] - ['{Context.Message.Content}'] Exception: {result.Error}"));
+            else //message is guild channel message - go ahead
+            {
+                //Check if we are allowd to send public channel response messages
+                if (ServerSettings.GetSettingsValue(ServerSettings.Settings.SendErrorMessage, Context.Guild.Id))
+                {
+
+                    await MessageHandler.SendEmbededMessageAsync(MessageHandler.MessageType.Error, Context.Channel, result.Error.Value.ToString(), message);
+                }
+                else if (ServerSettings.GetSettingsValue(ServerSettings.Settings.SendPrivateMessage, Context.Guild.Id))  //Check if we are allowed to send private response messages
+                {
+                    var channel = await Context.User.GetOrCreateDMChannelAsync();
+                    await MessageHandler.SendEmbededDMMessageAsync(MessageHandler.MessageType.Error, channel, result.Error.Value.ToString(), message);
+                }
+              
+                
+                //Write to log
+                await _client_Log(new LogMessage(LogSeverity.Error, $"{Source}", $"[{Context.Guild.Name}|{Context.Channel.Name}|{Context.User.Username}] - ['{Context.Message.Content}'] Exception: {result.Error}"));
+            }
+          
+          
         }
     }
 }
