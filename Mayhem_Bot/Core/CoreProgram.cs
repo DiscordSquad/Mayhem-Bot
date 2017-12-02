@@ -126,7 +126,7 @@ namespace Mayhem_Bot
             await _errorHandler._client_Log(new LogMessage(LogSeverity.Verbose, "Discord Chat", $"[{message.Channel.Name}|{message.Author.Username}] Command: {message.Content}"));
 
             //If error occures - direct them to the ErrorHandler
-            if (!result.IsSuccess) { await _errorHandler.HandleCommandError(context, result, "HandleCommands", context.IsPrivate); }
+            if (!result.IsSuccess) { await _errorHandler.HandleCommandError(context, result, "HandleCommands"); }
         }
 
 
@@ -134,6 +134,11 @@ namespace Mayhem_Bot
         Timer SaveTimer;
         public async void SaveTimerExecute(Object StateInfo)
         {
+            /*
+             * After a period of time
+             * the database will be save if
+             * the ChangesMade property is set to true
+             */
             await DatabaseHandler.SaveDatabase();
         }
         #endregion

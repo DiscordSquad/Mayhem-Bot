@@ -19,6 +19,7 @@ namespace Mayhem_Bot.Core
 
         public Task _client_Log(LogMessage arg)
         {
+            //Sets the default ConsoleColor for the Console
             ConsoleColor c = ConsoleColor.White;
             string message = $"[LOGHANDLER][{DateTime.Now.ToString()}] || [Severity: {arg.Severity.ToString()}] ";
             switch (arg.Severity)
@@ -56,18 +57,23 @@ namespace Mayhem_Bot.Core
             Console.ForegroundColor = ConsoleColor.White;
             return Task.CompletedTask;
         }
-
-        public async Task HandleCommandError(SocketCommandContext Context, IResult result, string Source, bool isPrivate)
+        /// <summary>
+        /// Directs the CommandError to the ErrorHandler and send a message if the settings are set to true
+        /// </summary>
+        /// <param name="Context">SocketCommandContext</param>
+        /// <param name="result">Result from the SocketCommandContext</param>
+        /// <param name="Source">The method which has been balled</param>
+        /// <returns></returns>
+        public async Task HandleCommandError(SocketCommandContext Context, IResult result, string Source)
         {
             string message = "";
+            //Whitelist case - Just filter the error we want to track
             switch (result.Error.Value.ToString())
             {
                 case "UnknownCommand":
                     message = $"I am not able to recognize this command, {Context.User.Username}.";
                     break;
             }
-
-           
             //Is definitely a private channel, no settings needed
             if (Context.IsPrivate)
             {
@@ -82,18 +88,12 @@ namespace Mayhem_Bot.Core
             else //message is guild channel message - go ahead
             {
                 //Check if we are allowd to send public channel response messages
-                if (ServerSettings.GetSettingsValue(ServerSettings.Settings.SendErrorMessage, Context.Guild.Id))
-                {
-
-                    await MessageHandler.SendEmbededMessageAsync(MessageHandler.MessageType.Error, Context.Channel, result.Error.Value.ToString(), message);
-                }
+                if (ServerSettings.GetSettingsValue(ServerSettings.Settings.SendErrorMessage, Context.Guild.Id)){await MessageHandler.SendEmbededMessageAsync(MessageHandler.MessageType.Error, Context.Channel, result.Error.Value.ToString(), message); }
                 else if (ServerSettings.GetSettingsValue(ServerSettings.Settings.SendPrivateMessage, Context.Guild.Id))  //Check if we are allowed to send private response messages
                 {
                     var channel = await Context.User.GetOrCreateDMChannelAsync();
                     await MessageHandler.SendEmbededDMMessageAsync(MessageHandler.MessageType.Error, channel, result.Error.Value.ToString(), message);
                 }
-              
-                
                 //Write to log
                 await _client_Log(new LogMessage(LogSeverity.Error, $"{Source}", $"[{Context.Guild.Name}|{Context.Channel.Name}|{Context.User.Username}] - ['{Context.Message.Content}'] Exception: {result.Error}"));
             }
