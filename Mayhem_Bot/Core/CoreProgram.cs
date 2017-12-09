@@ -44,9 +44,12 @@ namespace Mayhem_Bot
 
             //Block this task until the program is closed
             await Task.Delay(-1);
+            ReadInput();
         }
-
-       
+        private static void ReadInput(){
+            string input =Console.ReadLine();
+            ReadInput();
+        }
 
         public async Task LoadDatabase()
         {
