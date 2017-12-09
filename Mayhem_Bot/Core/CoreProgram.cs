@@ -120,6 +120,9 @@ namespace Mayhem_Bot
 
             //Create CommandContext
             var context = new SocketCommandContext(_client, message);
+            /*
+             * CHECK IF THE COMMAND IS ENABLE ON THE CONTEXT SERVER
+             */
             //Execute the Command
             var result = await _commands.ExecuteAsync(context, argPos, _services);
             //Send commanmd to the logHandler
