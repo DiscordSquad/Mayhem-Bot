@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Mayhem_Bot.Core;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace Mayhem_Bot.Core
+namespace Mayhem_Bot.Databases
 {
     public static class ServerSettings
     {
@@ -28,7 +29,7 @@ namespace Mayhem_Bot.Core
             //Get the SettingList from the Serverlist
             bool found = SettingList.TryGetValue(guid, out Dictionary<Settings, bool> gSettings);
             //Create new server settings if the server is not listed
-            if (!found) { CreateNewServerSettingList(guid); }
+            if (!found) { CreateNewServerSettingList(guid); found = SettingList.TryGetValue(guid, out gSettings);}
             //Get the specific setting from the SettingList
             if (found){ gSettings.TryGetValue(setting, out bool retVal); return retVal;} else { return found; }
             //return Setting
@@ -50,14 +51,14 @@ namespace Mayhem_Bot.Core
             //removes the guild from the list
             SettingList.TryRemove(guid, out Dictionary<Settings, bool> list);
             //Saves the server setting database
-            DatabaseHandler.ChangesMade = true;
+            SaveServerSettingsDatabase();
         }
         public static void CreateNewServerSettingList(ulong guid)
         {
             //If the bot joins a new server - create a default server setting list
             Dictionary<Settings, bool> settings = new Dictionary<Settings, bool>();
             //default setting values
-            settings.Add(Settings.SendErrorMessage, true);
+            settings.Add(Settings.SendErrorMessage, false);
             settings.Add(Settings.SendPrivateMessage, true);
             /*
              * 
@@ -76,7 +77,7 @@ namespace Mayhem_Bot.Core
         public static void SaveServerSettingsDatabase()
         {
             //determins that we have made some changes we need to save in the next interval
-            DatabaseHandler.ChangesMade = true;
+            DatabaseHandler.Database_ChangesMade = true;
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Mayhem_Bot.Databases;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -71,7 +72,7 @@ namespace Mayhem_Bot.Core
             switch (result.Error.Value.ToString())
             {
                 case "UnknownCommand":
-                    message = $"I am not able to recognize this command, {Context.User.Username}.";
+                    message = $"I am not able to recognize this command, {Context.User.Mention}.";
                     break;
             }
             //Is definitely a private channel, no settings needed

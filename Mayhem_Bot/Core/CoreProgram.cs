@@ -27,7 +27,6 @@ namespace Mayhem_Bot
         {
             //Initialize a new SocketClient
             _client = new DiscordSocketClient();
-
             //Initialize a new ErrorHandler and direct errors direct to the handler
             _errorHandler = new ErrorHandler();
             _client.Log += _errorHandler._client_Log;
@@ -128,6 +127,12 @@ namespace Mayhem_Bot
              */
             //Execute the Command
             var result = await _commands.ExecuteAsync(context, argPos, _services);
+            //If command is not private - increase counter
+            if (!context.IsPrivate)
+            {
+                Databases.GuildDatabase.IncreaseCount(context.User, context.Guild.Id, Databases.GuildDatabase.Counters.Commands, context.Message.Content);
+            }
+            
             //Send commanmd to the logHandler
             await _errorHandler._client_Log(new LogMessage(LogSeverity.Verbose, "Discord Chat", $"[{message.Channel.Name}|{message.Author.Username}] Command: {message.Content}"));
 
@@ -145,7 +150,7 @@ namespace Mayhem_Bot
              * the database will be save if
              * the ChangesMade property is set to true
              */
-            await DatabaseHandler.SaveDatabase();
+            await DatabaseHandler.PrepareSaveDatabases();
         }
         #endregion
     }
