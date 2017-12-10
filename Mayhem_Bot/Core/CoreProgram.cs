@@ -7,6 +7,7 @@ using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using System.Threading;
+using Mayhem_Bot.classes;
 
 namespace Mayhem_Bot
 {
@@ -40,11 +41,33 @@ namespace Mayhem_Bot
             //Launch the bot
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
-
+            //Creates the ConsoleAsync for ConsoleCommands
+            await ConsoleAsync();
             //Block this task until the program is closed
             await Task.Delay(-1);
             ReadInput();
         }
+
+        /// <summary>
+        /// Creates the ConsoleHandler
+        /// </summary>
+        /// <returns></returns>
+        public async Task ConsoleAsync()
+        {
+            if (!_errorHandler.DebugMode)
+            {
+                string test = Console.ReadLine();
+                ConsoleHandler.ExecuteCommand(test);
+                if (!_errorHandler.DebugMode)
+                    ConsoleHandler.EnterConsoleCommand();
+                await ConsoleAsync();
+                return;
+            }
+            ConsoleKeyInfo key = Console.ReadKey(true);
+            if(key.KeyChar == ' ') { ConsoleHandler.EnterConsoleMode();}
+            await ConsoleAsync();
+        }
+
         private static void ReadInput(){
             string input =Console.ReadLine();
             ReadInput();
@@ -81,7 +104,8 @@ namespace Mayhem_Bot
         {
             _client.JoinedGuild += _listenerHandler.JoinedGuild;
             _client.LeftGuild += _listenerHandler.LeftGuild;
-            
+            _client.UserJoined += _listenerHandler.UserJoined;
+            _client.UserLeft += _listenerHandler.UserLeft;
         }
 
       
@@ -110,11 +134,18 @@ namespace Mayhem_Bot
                 }
                 else
                 {
+                    //Create SocketGuildUser
+                    var chat_context = arg.Author as SocketGuildUser;
                     //Case public message
                     string text = "";
-                    text = message.Attachments.Count > 0 ? $"[{message.Channel.Name}|{message.Author.Username}] wrote: {message.Content} 'FILE ATTACHED'" : $"[{message.Channel.Name}|{message.Author.Username}] wrote: {message.Content}";
+                    text = message.Attachments.Count > 0 ? $"[{chat_context.Guild.Name}|{message.Channel.Name}|{message.Author.Username}] wrote: {message.Content} 'FILE ATTACHED'" : $"[{chat_context.Guild.Name}|{message.Channel.Name}|{message.Author.Username}] wrote: {message.Content}";
+                    //Check the type of the message
+                    Databases.GuildUserDatabase.Counters messageType = Databases.GuildUserDatabase.CheckMessageType(message.Content);
+                    //increase statistic counter for the user
+                    Databases.GuildUserDatabase.IncreaseCount(chat_context, chat_context.Guild.Id, messageType);
                     //Send message to the logHandler
                     await _errorHandler._client_Log(new LogMessage(LogSeverity.Debug, "Discord Chat",text));
+                    chat_context = null;
                    
                 }
                 return;
@@ -130,7 +161,7 @@ namespace Mayhem_Bot
             //If command is not private - increase counter
             if (!context.IsPrivate)
             {
-                Databases.GuildDatabase.IncreaseCount(context.User, context.Guild.Id, Databases.GuildDatabase.Counters.Commands, context.Message.Content);
+                Databases.GuildUserDatabase.IncreaseCount(context.User, context.Guild.Id, Databases.GuildUserDatabase.Counters.Commands, context.Message.Content);
             }
             
             //Send commanmd to the logHandler

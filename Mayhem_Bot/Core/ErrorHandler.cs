@@ -18,6 +18,9 @@ namespace Mayhem_Bot.Core
         const ConsoleColor DEBUG_COLOR = ConsoleColor.Blue;
         const ConsoleColor INFO_COLOR = ConsoleColor.Cyan;
 
+        public bool DebugMode = true;
+        public List<Tuple<string, ConsoleColor>> PauseList = new List<Tuple<string, ConsoleColor>>();
+
         public Task _client_Log(LogMessage arg)
         {
             //Sets the default ConsoleColor for the Console
@@ -53,11 +56,36 @@ namespace Mayhem_Bot.Core
                 default:
                     break;
             }
-            Console.ForegroundColor = c;
-            Console.WriteLine(message);
-            Console.ForegroundColor = ConsoleColor.White;
+
+            if (DebugMode)
+            {
+                Console.ForegroundColor = c;
+                Console.WriteLine(message);
+                Console.ForegroundColor = ConsoleColor.White;
+            }
+            else
+            {
+                PauseList.Add(new Tuple<string, ConsoleColor>(message, c));
+            }
+            
+
             return Task.CompletedTask;
         }
+
+        public Task ResumeDebug()
+        {
+            foreach (var item in PauseList)
+            {
+                Console.ForegroundColor = item.Item2;
+                Console.WriteLine(item.Item1);
+                Console.ForegroundColor = ConsoleColor.White;
+            }
+            PauseList = null;
+            PauseList = new List<Tuple<string, ConsoleColor>>();
+            DebugMode = true;
+            return Task.CompletedTask;
+        }
+
         /// <summary>
         /// Directs the CommandError to the ErrorHandler and send a message if the settings are set to true
         /// </summary>

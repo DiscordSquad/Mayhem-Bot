@@ -58,7 +58,7 @@ namespace Mayhem_Bot.Databases
             //If the bot joins a new server - create a default server setting list
             Dictionary<Settings, bool> settings = new Dictionary<Settings, bool>();
             //default setting values
-            settings.Add(Settings.SendErrorMessage, false);
+            settings.Add(Settings.SendErrorMessage, true);
             settings.Add(Settings.SendPrivateMessage, true);
             /*
              * 

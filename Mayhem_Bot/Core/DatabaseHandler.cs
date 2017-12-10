@@ -32,8 +32,8 @@ namespace Mayhem_Bot.Core
         public static async Task PrepareSaveDatabases()
         {
             //Check which database has changes
-            if (Database_ChangesMade){await SaveDatabase(); await CoreProgram._errorHandler._client_Log(new LogMessage(LogSeverity.Debug, "PrepareSaveDatabase", "ServerDatabase has been saved!")); }
-            if (GuildDatabase_ChangesMade){await SaveGuildDatabase(); await CoreProgram._errorHandler._client_Log(new LogMessage(LogSeverity.Debug, "PrepareSaveDatabase", "GuildDatabase has been saved!")); }  
+            if (Database_ChangesMade){await SaveDatabase(); await CoreProgram._errorHandler._client_Log(new LogMessage(LogSeverity.Info, "PrepareSaveDatabase", "ServerDatabase has been saved!")); }
+            if (GuildDatabase_ChangesMade){await SaveGuildDatabase(); await CoreProgram._errorHandler._client_Log(new LogMessage(LogSeverity.Info, "PrepareSaveDatabase", "GuildDatabase has been saved!")); }  
         }
 
 
@@ -73,7 +73,7 @@ namespace Mayhem_Bot.Core
             GuildUserDatabase gdb = new GuildUserDatabase();
             //implement all setting/cache lists in here!
 
-            gdb.GuildUserDatabaseDictionary = Databases.GuildDatabase.GuildSettingsList;
+            gdb.GuildUserDatabaseDictionary = Databases.GuildUserDatabase.GuildSettingsList;
             gdb.LastUpdate = DateTime.Now;
        
             //string serialization with json
@@ -128,7 +128,7 @@ namespace Mayhem_Bot.Core
                         //create a new GuildDatabase from the json deserializer
                         GuildUserDatabase gdb = Newtonsoft.Json.JsonConvert.DeserializeObject<GuildUserDatabase>(json);
                         //set all setting/cache lists in here!
-                        if (gdb != null) { Databases.GuildDatabase.GuildSettingsList = gdb.GuildUserDatabaseDictionary; await CoreProgram._errorHandler._client_Log(new LogMessage(LogSeverity.Debug, "LoadDatabase", "Loaded: guild_database...")); }
+                        if (gdb != null) { Databases.GuildUserDatabase.GuildSettingsList = gdb.GuildUserDatabaseDictionary; await CoreProgram._errorHandler._client_Log(new LogMessage(LogSeverity.Debug, "LoadDatabase", "Loaded: guild_database...")); }
                         else { await CoreProgram._errorHandler._client_Log(new LogMessage(LogSeverity.Critical, "LoadDatabase", "Could not load GuildUserDatabase", new NullReferenceException())); }
                     }
                 }
