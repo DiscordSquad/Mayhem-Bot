@@ -23,6 +23,7 @@ namespace Mayhem_Bot
         //Needs to remove after push
         private const string token = "Mzg1OTExMDAxMDI5MTQ4Njcy.DQIPbg.XJ1suCOfubEEQzRSbRnU2hMIJ4Q";
         public const char prefix = '!';
+
         private static void Main(string[] args) => new CoreProgram().MainAsync(args).GetAwaiter().GetResult();
         public async Task MainAsync(string[] args)
         {
@@ -64,7 +65,7 @@ namespace Mayhem_Bot
                 return;
             }
             ConsoleKeyInfo key = Console.ReadKey(true);
-            if(key.KeyChar == ' ') { ConsoleHandler.EnterConsoleMode();}
+            if(key.KeyChar == ' ') { ConsoleHandler.ConsoleCommands.EnterConsoleMode();}
             await ConsoleAsync();
         }
 
